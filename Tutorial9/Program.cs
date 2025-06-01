@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tutorial9.Models;
+using Tutorial9.Repositories;
+using Tutorial9.Repositories.Interfaces;
 
 namespace Tutorial9;
 
@@ -17,6 +19,9 @@ public static class Program
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             options.UseSqlServer(connectionString);
         });
+        builder.Services.AddScoped<ITripRepository, TripRepository>();
+        builder.Services.AddScoped<IClientRepository, ClientRepository>();
+        
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
