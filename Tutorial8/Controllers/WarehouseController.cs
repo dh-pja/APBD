@@ -9,6 +9,20 @@ namespace Tutorial8.Controllers;
 [Route("api/warehouses")]
 public class WarehouseController(IWarehouseRepository warehouseRepository, IOrderRepository orderRepository) : ControllerBase
 {
+    
+    [HttpGet("test-connection")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> TestConnection(CancellationToken ct)
+    {
+        var result = await warehouseRepository.TestConnection(ct);
+        if (result)
+        {
+            return Ok("Connection successful");
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, "Connection failed");
+    }
+    
     [HttpPost("add-product")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]

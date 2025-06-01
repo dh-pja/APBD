@@ -1,9 +1,9 @@
-using Tutorial8.Repositories;
-using Tutorial8.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Tutorial9.Models;
 
-namespace Tutorial8;
+namespace Tutorial9;
 
-public class Program
+public static class Program
 {
     public static void Main(string[] args)
     {
@@ -12,9 +12,11 @@ public class Program
         // Add services to the container.
 
         builder.Services.AddControllers();
-        builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
-        builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-        
+        builder.Services.AddDbContext<TutorialNineContext>(options =>
+        {
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            options.UseSqlServer(connectionString);
+        });
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
@@ -32,7 +34,7 @@ public class Program
 
 
         app.MapControllers();
-        
+
         app.Run();
     }
 }

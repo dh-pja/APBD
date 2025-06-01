@@ -10,6 +10,22 @@ public class WarehouseRepository(IConfiguration configuration) : IWarehouseRepos
                                                 throw new ArgumentException("Connection string not found");
 
 
+    public Task<bool> TestConnection(CancellationToken cancellationToken)
+    {
+        const string query = """
+                              SELECT 1
+                              """;
+
+        return Task.Run(async () =>
+        {
+            await using SqlConnection con = new SqlConnection(_connectionString);
+            await using SqlCommand cmd = new SqlCommand(query, con);
+            await con.OpenAsync(cancellationToken);
+            var result = await cmd.ExecuteScalarAsync(cancellationToken);
+            return result is not null;
+        }, cancellationToken);
+    }
+
     public async Task<int> AddProductToWarehouse(ProductWarehouse productWarehouse, int orderId, CancellationToken cancellationToken)
     {
         const string query = """

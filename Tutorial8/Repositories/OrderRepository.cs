@@ -17,27 +17,26 @@ public class OrderRepository(IConfiguration configuration) : IOrderRepository
                               """;
 
         await using SqlConnection con = new SqlConnection(_connectionString);
-        await using (SqlCommand cmd = new SqlCommand(query, con))
+        await con.OpenAsync(cancellationToken);
+        await using SqlCommand cmd = new SqlCommand(query, con);
+        cmd.Parameters.AddWithValue("@ProductId", productId);
+        cmd.Parameters.AddWithValue("@Amount", amount);
+        cmd.Parameters.AddWithValue("@CreatedAt", createdAt);
+
+        
+            
+        var order = (exists: false, orderId: 0);
+            
+        var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
         {
-            cmd.Parameters.AddWithValue("@ProductId", productId);
-            cmd.Parameters.AddWithValue("@Amount", amount);
-            cmd.Parameters.AddWithValue("@CreatedAt", createdAt);
-
-            await con.OpenAsync(cancellationToken);
-            
-            var order = (exists: false, orderId: 0);
-            
-            var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-            if (await reader.ReadAsync(cancellationToken))
-            {
-                order = (true, reader.GetInt32(0));
-            }
-
-            await reader.CloseAsync();
-            await con.CloseAsync();
-            
-            return order;
+            order = (true, reader.GetInt32(0));
         }
+
+        await reader.CloseAsync();
+        await con.CloseAsync();
+
+        return order;
     }
 
     public async Task<bool> IsOrderFulfilled(int orderId, CancellationToken cancellationToken)
