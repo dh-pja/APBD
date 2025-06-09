@@ -1,0 +1,1 @@
+dotnet ef dbcontext scaffold "Server=localhost,1433;Database=tutorial_nine;User ID=sa;Password=PASSword123;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer --output-dir Models
