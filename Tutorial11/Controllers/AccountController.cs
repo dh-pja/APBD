@@ -26,7 +26,7 @@ public class AccountController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(UserDataDTO request)
+    public async Task<IActionResult> Register([FromBody] UserDataDTO request)
     {
         if (await _dbService.UserExistsAsync(request.Login))
         {
@@ -42,7 +42,7 @@ public class AccountController : ControllerBase
     
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login(UserDataDTO request)
+    public async Task<IActionResult> Login([FromBody] UserDataDTO request)
     {
         var user = await _dbService.GetUserByUsernameAsync(request.Login);
         
@@ -69,6 +69,39 @@ public class AccountController : ControllerBase
         {
             AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
             RefreshToken = refreshToken
+        });
+    }
+    
+    [Authorize]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized("Invalid user.");
+        }
+
+        var user = await _dbService.GetUserByUsernameAsync(userId);
+        if (user?.RefreshToken == null || 
+            user.RefreshTokenExpiryTime < DateTime.UtcNow || 
+            user.RefreshToken != refreshToken)
+        {
+            return Unauthorized("Invalid or expired refresh token.");
+        }
+
+        var newAccessToken = Tokens.CreateAccessToken(user, _configuration);
+        var newRefreshToken = Tokens.GenerateRefreshToken();
+
+        if (!await _dbService.RefreshTokenAsync(user, newRefreshToken))
+        {
+            return StatusCode(500, "Error saving new refresh token.");
+        }
+
+        return Ok(new
+        {
+            AccessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+            RefreshToken = newRefreshToken
         });
     }
 }
