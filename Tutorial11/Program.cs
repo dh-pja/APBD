@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Tutorial11.DAL;
 using Tutorial11.Middlewares;
+using Tutorial11.Services;
 
 namespace Tutorial11;
 
@@ -14,12 +15,13 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddControllers();
+        builder.Services.AddScoped<IDbService, DbService>();
         builder.Services.AddDbContext<TutElDbContext>(options =>
         {
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             options.UseSqlServer(connectionString);
         });
+        builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
